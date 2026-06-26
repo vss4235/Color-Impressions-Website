@@ -1,0 +1,743 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Color Impressions</title>
+<link rel="stylesheet" href="https://use.typekit.net/ajs1bbh.css">
+<style>
+
+  @font-face {
+    font-family: 'TWKEverett';
+    src: url('TWKEverett-Regular.ttf') format('truetype');
+    font-weight: 400;
+    font-style: normal;
+  }
+
+  @font-face {
+    font-family: 'TWKEverettMono';
+    src: url('TWKEverettMono-Light.ttf') format('truetype');
+    font-weight: 300;
+    font-style: normal;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --ink: #ffffff;
+    --paper: #000000;
+    --mid: #212121;
+  }
+
+  html, body {
+    height: 100%;
+    overflow: hidden;
+    background: var(--ink);
+  }
+
+  /* ── ANIMATED BACKGROUND GRID ── */
+  #bgGrid {
+    position: fixed;
+    inset: 0;
+    display: grid;
+    z-index: 0;
+  }
+  .bg-cell {
+    opacity: 0;
+    transition: opacity 9s ease;
+  }
+
+  #gridLines {
+    display: none;
+  }
+
+  /* ── LAYOUT CONTAINER ── */
+  .phone-wrap {
+    position: relative;
+    z-index: 2;
+    width: 100%;
+    height: 100vh;
+    height: 100dvh; /* uses actual visible viewport on mobile */
+    background: transparent;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    transition: backdrop-filter 0.8s ease, -webkit-backdrop-filter 0.8s ease;
+  }
+  .l-header, .content-area, .bottom-nav, .credit { transition: opacity 0.9s ease, filter 0.9s ease; }
+  #bgGrid, #gridLines { transition: opacity 0.5s ease; }
+
+  /* ── HEADER ── */
+  .l-header {
+    background: transparent;
+    flex-shrink: 0;
+    z-index: 10;
+    padding: 1.8rem 1.5rem;
+    display: flex;
+    justify-content: center;
+  }
+  .l-header-text {
+    font-family: 'panel-sans-mono', monospace;
+    font-size: 0.95rem;
+    font-weight: 400;
+    font-style: italic;
+    letter-spacing: 0.009em;
+    white-space: nowrap;
+    background: #ffffff;
+    border: none;
+    border-radius: 500px;
+    padding: 0.99rem 3rem;
+    box-shadow: 0 2px 14px rgba(0,0,0,0.14);
+    transform: scaleX(0.85);
+    transform-origin: center center;
+  }
+
+  /* ── DESCRIPTION ── */
+  .content-area {
+    flex: 1;
+    position: relative;
+  }
+  .desc-block {
+    position: absolute;
+    bottom: 2rem;
+    left: 2.5rem;
+    max-width: 350px;
+    font-family: 'TWKEverettMono', monospace;
+    font-weight: 300;
+    font-style: normal;
+    font-size: 1.1rem;
+     letter-spacing: -0.03em;
+    line-height: 1.45;
+    color: #000000;
+    transition: opacity 0.7s ease;
+  }
+  .desc-block p + p { margin-top: 0.9em; }
+  .desc-default { opacity: 1; }
+  .desc-hover   { opacity: 0; }
+  .content-area.show-more .desc-default { opacity: 0; }
+  .content-area.show-more .desc-hover   { opacity: 1; }
+
+  /* ── SCROLL HINT ── */
+  @keyframes hintShow {
+    0%   { opacity: 0;   transform: translateY(0); }
+    12%  { opacity: 0.9; transform: translateY(0); }
+    28%  { opacity: 0.9; transform: translateY(6px); }
+    44%  { opacity: 0.9; transform: translateY(0); }
+    60%  { opacity: 0.9; transform: translateY(6px); }
+    76%  { opacity: 0.9; transform: translateY(0); }
+    100% { opacity: 0;   transform: translateY(6px); }
+  }
+  .scroll-hint {
+    position: absolute;
+    bottom: 0.6rem;
+    left: 2.5rem;
+    font-family: 'TWKEverettMono', monospace;
+    font-weight: 300;
+    font-size: 0.65rem;
+    letter-spacing: 0.1em;
+    color: #000000;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    opacity: 0;
+    animation: hintShow 5s ease forwards;
+    animation-delay: 6s;
+    pointer-events: none;
+  }
+  @media (max-width: 480px) {
+    .scroll-hint { left: 1rem; }
+  }
+
+  /* ── BOTTOM NAV ── */
+  .bottom-nav {
+    flex-shrink: 0;
+    display: flex;
+    gap: 8px;
+    padding: 0.8rem 1rem 2.5rem;
+    padding-bottom: calc(2.5rem + env(safe-area-inset-bottom));
+  }
+  .nav-btn {
+    flex: 1;
+    padding: 1.1rem 0.5rem;
+    border-radius: 500px;
+    background: rgba(255,255,255,0.28);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border: 1px solid rgba(255,255,255,0.55);
+    box-shadow: 0 2px 16px rgba(0,0,0,0.08), inset 0 1px 0 rgba(255,255,255,0.6);
+    font-family: 'panel-sans-mono', monospace;
+    font-size: 0.72rem;
+    font-weight: 500;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    cursor: pointer;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #000000;
+    white-space: normal;
+    text-align: center;
+    line-height: 1.3;
+    transition: background 0.2s, box-shadow 0.2s;
+  }
+  .nav-btn:hover {
+    background: rgba(255,255,255,0.45);
+    box-shadow: 0 4px 24px rgba(0,0,0,0.12), inset 0 1px 0 rgba(255,255,255,0.7);
+  }
+  .nav-btn--disabled {
+    opacity: 0.35;
+    cursor: default;
+    pointer-events: none;
+  }
+  .credit {
+    text-align: center;
+    font-family: 'TWKEverettMono', monospace;
+    font-weight: 300;
+    font-size: 0.62rem;
+    letter-spacing: 0.08em;
+    color: rgba(0,0,0,0.35);
+    padding-bottom: calc(0.6rem + env(safe-area-inset-bottom));
+    flex-shrink: 0;
+  }
+  .credit a {
+    color: inherit;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+  .credit a:hover { opacity: 0.6; }
+
+  @media (max-width: 480px) {
+    .bottom-nav { gap: 8px; padding: 0.8rem 0.8rem 1.4rem; }
+    .nav-btn {
+      font-size: 0.62rem;
+      letter-spacing: 0.1em;
+      padding: 1rem 0.4rem;
+      box-shadow: 0 3px 16px rgba(0,0,0,0.18);
+    }
+    .l-header { padding: 0.7rem 1rem; }
+    .l-header-text { font-size: 0.82rem; padding: 0.75rem 2rem; }
+    .desc-block { left: 1rem; right: 1rem; max-width: none; }
+  }
+
+  /* ── FEEDBACK BUTTON ── */
+  .feedback-wrap {
+    position: fixed;
+    top: 1.91rem;
+    right: 1.5rem;
+    z-index: 200;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 8px;
+    transition: opacity 0.9s ease;
+  }
+  @media (max-width: 480px) {
+    .feedback-wrap { top: 0.49rem; right: 1rem; }
+  }
+  .feedback-toggle {
+    width: 2.9rem;
+    height: 2.9rem;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.28);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border: 1px solid rgba(255,255,255,0.55);
+    box-shadow: 0 2px 16px rgba(0,0,0,0.08), inset 0 1px 0 rgba(255,255,255,0.6);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s, box-shadow 0.2s;
+  }
+  .feedback-toggle:hover {
+    background: rgba(255,255,255,0.45);
+    box-shadow: 0 4px 24px rgba(0,0,0,0.12), inset 0 1px 0 rgba(255,255,255,0.7);
+  }
+  .feedback-panel {
+    display: none;
+    flex-direction: column;
+    gap: 8px;
+    background: rgba(255,255,255,0.72);
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+    border: 1px solid rgba(255,255,255,0.7);
+    border-radius: 14px;
+    padding: 12px;
+    width: 300px;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.12);
+    transform-origin: top right;
+    animation: feedbackBalloon 0.42s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  }
+  @media (max-width: 480px) {
+    .feedback-panel { width: 220px; }
+  }
+  .feedback-panel.open { display: flex; }
+  @keyframes feedbackBalloon {
+    from { opacity: 0; transform: scale(0.2); }
+    to   { opacity: 1; transform: scale(1); }
+  }
+  @keyframes feedbackDeflate {
+    from { opacity: 1; transform: scale(1); }
+    to   { opacity: 0; transform: scale(0.2); }
+  }
+  .feedback-panel.closing {
+    animation: feedbackDeflate 0.32s cubic-bezier(0.36, 0, 0.66, -0.56) both;
+  }
+  .feedback-label {
+    font-family: 'panel-sans-mono', monospace;
+    font-size: 0.6rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: rgba(0,0,0,0.45);
+  }
+  .feedback-textarea {
+    width: 100%;
+    min-height: 80px;
+    border: 1px solid rgba(0,0,0,0.12);
+    border-radius: 8px;
+    padding: 8px 10px;
+    font-family: 'TWKEverettMono', monospace;
+    font-weight: 300;
+    font-size: 0.72rem;
+    color: #000;
+    background: rgba(255,255,255,0.8);
+    resize: none;
+    outline: none;
+    box-sizing: border-box;
+  }
+  .feedback-textarea:focus { border-color: rgba(0,0,0,0.3); }
+  .feedback-submit {
+    align-self: flex-end;
+    background: #000;
+    color: #fff;
+    border: none;
+    border-radius: 500px;
+    padding: 0.45rem 1.1rem;
+    font-family: 'panel-sans-mono', monospace;
+    font-size: 0.6rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+  .feedback-submit:hover { background: #333; }
+  .feedback-confirm {
+    font-family: 'TWKEverettMono', monospace;
+    font-weight: 300;
+    font-size: 0.68rem;
+    color: rgba(0,0,0,0.55);
+    text-align: center;
+    padding: 4px 0;
+  }
+
+</style>
+</head>
+<body>
+
+<div id="bgGrid"></div>
+<div id="gridLines"></div>
+
+<!-- Feedback button -->
+<div class="feedback-wrap">
+  <button class="feedback-toggle" id="feedbackToggle" onclick="toggleFeedback()" title="Leave feedback">
+    <svg width="13" height="13" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+      <path id="feedbackStar" fill="rgba(0,0,0,0.45)"/>
+    </svg>
+  </button>
+  <div class="feedback-panel" id="feedbackPanel">
+    <div class="feedback-label">Feedback</div>
+    <textarea class="feedback-textarea" id="feedbackText" placeholder="Thoughts, questions, reactions…"></textarea>
+    <button class="feedback-submit" onclick="submitFeedback()">Send</button>
+  </div>
+</div>
+
+<div class="phone-wrap">
+  <header class="l-header">
+    <div class="l-header-text">Color Impressions</div>
+  </header>
+  <div class="content-area">
+    <div class="desc-block desc-default">
+      <p>Color Impressions is a palette creation tool that offers insight into who you are. The tool is part of an ongoing research project aiming to explore people's personal relationships with color, as well as the influence of place on color perception.</p>
+    </div>
+    <div class="desc-block desc-hover">
+      <p>Through questions rooted in memories, feelings, and personal experiences, you build a palette that works as a suggestion of the colors that resonate most with who you are.</p>
+      <p>The palettes collected from participants around the world are gathered in the ColorCard Archive, which visualizes these shared and contrasting impressions, in hopes to reveal patterns across people and places.</p>
+    </div>
+    <div class="scroll-hint">scroll ↓</div>
+  </div>
+  <nav class="bottom-nav">
+    <a href="questionary.html" class="nav-btn">Build your palette</a>
+    <a href="archive.html" class="nav-btn">Colorcard archive</a>
+    <a href="resources.html" class="nav-btn">Resources</a>
+  </nav>
+  <div class="credit">designed by <a href="https://virginiaschroder.com/" target="_blank" rel="noopener">virginiaschroder.com</a></div>
+</div>
+
+<script>
+(function () {
+  var COLORS = [
+    '#eeecc5', '#f7f382', '#c1bc78', '#c5a115',
+    '#fff1d9', '#f48656', '#ff8500', '#ddd3cd',
+    '#b37d58', '#e8d3c8', '#f9afa0', '#ba3b33',
+    '#8e4040', '#e5bebe', '#f2a5e4', '#ff6cd5',
+    '#d9c5ef', '#ae94ff', '#7777c9', '#c9e4ff',
+    '#60c0f6', '#4b6188', '#b5e2cf', '#4a8e7e',
+    '#e8f9d9', '#bed8a7', '#c6d130', '#4d7c50',
+    '#ffca00', '#ff4f01', '#5e2b23', '#0091ff',
+    '#d82335', '#ff4848', 
+  ];
+
+  var grid   = document.getElementById('bgGrid');
+  var cells  = [];
+
+  var gridLines = document.getElementById('gridLines');
+
+  function buildGrid() {
+    grid.innerHTML = '';
+    cells = [];
+    var rows  = 3;
+    var cellW = window.innerWidth <= 480
+      ? Math.max(100, Math.floor(window.innerWidth / 4))
+      : Math.max(90,  Math.floor(window.innerWidth / 6));
+    var cols  = Math.ceil(window.innerWidth / cellW);
+    grid.style.gridTemplateColumns = 'repeat(' + cols + ', 1fr)';
+    grid.style.gridTemplateRows    = 'repeat(' + rows + ', 1fr)';
+    // sync grid line overlay to actual cell dimensions
+    var lineCellW = window.innerWidth  / cols;
+    var lineCellH = window.innerHeight / rows;
+    gridLines.style.backgroundSize = lineCellW + 'px ' + lineCellH + 'px';
+    for (var i = 0; i < cols * rows; i++) {
+      var cell = document.createElement('div');
+      cell.className = 'bg-cell';
+      grid.appendChild(cell);
+      cells.push({ el: cell, active: false });
+    }
+  }
+
+  function lightCell() {
+    var idle = cells.filter(function (c) { return !c.active; });
+    if (idle.length === 0) return;
+    var entry = idle[Math.floor(Math.random() * idle.length)];
+    var color = COLORS[Math.floor(Math.random() * COLORS.length)];
+    entry.active = true;
+    entry.el.style.backgroundColor = color;
+    requestAnimationFrame(function () {
+      requestAnimationFrame(function () {
+        entry.el.style.opacity = '1';
+      });
+    });
+    var hold = 10000 + Math.random() * 8000;
+    setTimeout(function () {
+      entry.el.style.opacity = '0';
+      setTimeout(function () { entry.active = false; }, 9000);
+    }, hold);
+  }
+
+  buildGrid();
+
+  // Gentle start: a few cells trickle in, then settle into a steady rhythm
+  setTimeout(function() { lightCell(); }, 1200);
+  setTimeout(function() { lightCell(); }, 2200);
+  setTimeout(function() { lightCell(); }, 3000);
+  setTimeout(function() { lightCell(); }, 3800);
+  setTimeout(function() {
+    setInterval(lightCell, 2000);
+  }, 4500);
+
+  var resizeTimer;
+  window.addEventListener('resize', function () {
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(buildGrid, 200);
+  });
+
+  // light up the cell under the mouse on hover
+  var lastHoverIndex = -1;
+  window.addEventListener('mousemove', function (e) {
+    var gridRect = grid.getBoundingClientRect();
+    var cols = parseInt(grid.style.gridTemplateColumns.match(/\d+/)[0]);
+    var rows = parseInt(grid.style.gridTemplateRows.match(/\d+/)[0]);
+    var col = Math.floor((e.clientX - gridRect.left) / gridRect.width  * cols);
+    var row = Math.floor((e.clientY - gridRect.top)  / gridRect.height * rows);
+    col = Math.max(0, Math.min(cols - 1, col));
+    row = Math.max(0, Math.min(rows - 1, row));
+    var idx = row * cols + col;
+    if (idx === lastHoverIndex) return;
+    lastHoverIndex = idx;
+    var entry = cells[idx];
+    if (!entry || entry.active) return;
+    var color = COLORS[Math.floor(Math.random() * COLORS.length)];
+    entry.active = true;
+    entry.el.style.backgroundColor = color;
+    requestAnimationFrame(function () {
+      requestAnimationFrame(function () {
+        entry.el.style.opacity = '1';
+      });
+    });
+    setTimeout(function () {
+      entry.el.style.opacity = '0';
+      setTimeout(function () { entry.active = false; }, 3000);
+    }, 3000 + 500 + Math.random() * 1500);
+  });
+}());
+
+// ── PAGE ENTER ANIMATION ──
+(function () {
+  var wrap    = document.querySelector('.phone-wrap');
+  var header  = document.querySelector('.l-header');
+  var nav     = document.querySelector('.bottom-nav');
+  var credit  = document.querySelector('.credit');
+  var content = document.querySelector('.content-area');
+
+  function hide(el) {
+    if (!el) return;
+    el.style.opacity = '0';
+    el.style.filter  = 'blur(10px)';
+  }
+  function show(el) {
+    if (!el) return;
+    el.style.opacity = '1';
+    el.style.filter  = 'blur(0px)';
+  }
+
+  // set blurry/invisible initial state before first paint
+  wrap.style.backdropFilter = 'blur(50px)';
+  wrap.style.webkitBackdropFilter = 'blur(50px)';
+  [header, nav, credit, content].forEach(hide);
+
+  requestAnimationFrame(function () {
+    requestAnimationFrame(function () {
+      // background sharpens
+      wrap.style.backdropFilter = 'blur(6px)';
+      wrap.style.webkitBackdropFilter = 'blur(6px)';
+      // 1. pill
+      show(header);
+      // 2. bottom buttons
+      setTimeout(function () { show(nav); show(credit); }, 500);
+      // 3. main text
+      setTimeout(function () { show(content); }, 1000);
+    });
+  });
+}());
+
+// ── PAGE TRANSITION ──
+(function () {
+  var wrap  = document.querySelector('.phone-wrap');
+  var grid  = document.getElementById('bgGrid');
+  var lines = document.getElementById('gridLines');
+  var contentEls = ['.l-header', '.content-area', '.bottom-nav', '.credit', '.feedback-wrap']
+    .map(function (s) { return document.querySelector(s); })
+    .filter(Boolean);
+
+  document.querySelectorAll('.nav-btn').forEach(function (btn) {
+    btn.addEventListener('click', function (e) {
+      e.preventDefault();
+      var href = btn.getAttribute('href');
+      // phase 1: content + grid lines fade, blur intensifies
+      contentEls.forEach(function (el) { el.style.opacity = '0'; });
+      lines.style.opacity = '0';
+      wrap.style.backdropFilter = 'blur(60px)';
+      wrap.style.webkitBackdropFilter = 'blur(60px)';
+      setTimeout(function () {
+        // phase 2: blurry coloured background fades to white
+        grid.style.opacity = '0';
+        setTimeout(function () {
+          window.location.href = href;
+        }, 520);
+      }, 350);
+    });
+  });
+}());
+
+// ── TEXT SCROLL TOGGLE ──
+(function () {
+  var area = document.querySelector('.content-area');
+  var touchStartY = 0;
+
+  window.addEventListener('wheel', function (e) {
+    if (e.deltaY > 0) {
+      area.classList.add('show-more');
+    } else {
+      area.classList.remove('show-more');
+    }
+  }, { passive: true });
+
+  window.addEventListener('touchstart', function (e) {
+    touchStartY = e.touches[0].clientY;
+  }, { passive: true });
+
+  window.addEventListener('touchend', function (e) {
+    var dy = touchStartY - e.changedTouches[0].clientY;
+    if (dy > 20) {
+      area.classList.add('show-more');
+    } else if (dy < -20) {
+      area.classList.remove('show-more');
+    }
+  }, { passive: true });
+}());
+</script>
+
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script>
+(function () {
+  if (!firebase.apps.length) {
+    firebase.initializeApp({
+      apiKey:            "AIzaSyDlyWwaGXsVq2imeOjezKVK6yypu-LsBUM",
+      authDomain:        "color-impressions-archive.firebaseapp.com",
+      projectId:         "color-impressions-archive",
+      storageBucket:     "color-impressions-archive.firebasestorage.app",
+      messagingSenderId: "24174746834",
+      appId:             "1:24174746834:web:7a22289e0052019e31210b"
+    });
+  }
+  var db = firebase.firestore();
+
+  function closeFeedback() {
+    var panel = document.getElementById('feedbackPanel');
+    if (!panel.classList.contains('open') || panel.classList.contains('closing')) return;
+    panel.classList.add('closing');
+    setTimeout(function () {
+      panel.classList.remove('open');
+      panel.classList.remove('closing');
+      panel.innerHTML =
+        '<div class="feedback-label">Feedback</div>' +
+        '<textarea class="feedback-textarea" id="feedbackText" placeholder="Thoughts, questions, reactions…"></textarea>' +
+        '<button class="feedback-submit" onclick="submitFeedback()">Send</button>';
+    }, 340);
+  }
+
+  window.toggleFeedback = function () {
+    var panel = document.getElementById('feedbackPanel');
+    if (panel.classList.contains('open')) {
+      closeFeedback();
+    } else {
+      panel.classList.add('open');
+      setTimeout(function () {
+        var t = document.getElementById('feedbackText');
+        if (t) t.focus();
+      }, 50);
+    }
+  };
+
+  document.addEventListener('click', function (e) {
+    var wrap = document.querySelector('.feedback-wrap');
+    if (wrap && !wrap.contains(e.target)) {
+      closeFeedback();
+    }
+  });
+
+  window.submitFeedback = function () {
+    var text = (document.getElementById('feedbackText').value || '').trim();
+    if (!text) return;
+
+    db.collection('feedback').add({
+      message:   text,
+      timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+      page:      'index'
+    }).catch(function (err) { console.error('Feedback error:', err); });
+
+    var panel = document.getElementById('feedbackPanel');
+    panel.innerHTML = '<div class="feedback-confirm">Thank you!</div>';
+    setTimeout(function () {
+      panel.classList.add('closing');
+      setTimeout(function () {
+        panel.classList.remove('open');
+        panel.classList.remove('closing');
+        panel.innerHTML =
+          '<div class="feedback-label">Feedback</div>' +
+          '<textarea class="feedback-textarea" id="feedbackText" placeholder="Thoughts, questions, reactions…"></textarea>' +
+          '<button class="feedback-submit" onclick="submitFeedback()">Send</button>';
+      }, 340);
+    }, 1000);
+  };
+}());
+</script>
+
+<!-- Star morph animation -->
+<script>
+(function () {
+  var cx = 12, cy = 12, outerR = 10, TOTAL = 48;
+
+  var shapes = [
+    { n: 4, inner: 1.8 },   // sharp 4-pointed sparkle
+    { n: 5, inner: 4.2 },   // classic 5-pointed star
+    { n: 6, inner: 5.2 },   // 6-pointed star
+    { n: 8, inner: 6.5 },   // 8-pointed asterisk
+  ];
+
+  function computeShape(def) {
+    var pts = [];
+    for (var i = 0; i < TOTAL; i++) {
+      var theta = (i / TOTAL) * 2 * Math.PI - Math.PI / 2;
+      var t = (def.n * i / TOTAL) % 1;
+      var blend = 0.5 - 0.5 * Math.cos(t * 2 * Math.PI);
+      var r = outerR - (outerR - def.inner) * blend;
+      pts.push([cx + r * Math.cos(theta), cy + r * Math.sin(theta)]);
+    }
+    return pts;
+  }
+
+  function ease(t) { return t < 0.5 ? 2*t*t : -1+(4-2*t)*t; }
+
+  function toPath(pts, rot) {
+    var cos = Math.cos(rot), sin = Math.sin(rot);
+    return 'M' + pts.map(function(p) {
+      var dx = p[0] - cx, dy = p[1] - cy;
+      return (cx + dx*cos - dy*sin).toFixed(2) + ' ' + (cy + dx*sin + dy*cos).toFixed(2);
+    }).join('L') + 'Z';
+  }
+
+  var allShapes = shapes.map(computeShape);
+  var pathEl    = document.getElementById('feedbackStar');
+  if (!pathEl) return;
+
+  var fromIdx  = 0;
+  var progress = 0;
+  var holding  = true;
+  var holdTime = 0;
+  var rot      = 0;
+  var HOLD     = 1400;
+  var MORPH    = 900;
+  var ROT_SPEED = 0.00022; // radians per ms (~full turn in 28s)
+  var lastTs   = null;
+
+  pathEl.setAttribute('d', toPath(allShapes[0], 0));
+
+  requestAnimationFrame(function tick(ts) {
+    if (!lastTs) lastTs = ts;
+    var dt = ts - lastTs;
+    lastTs = ts;
+
+    rot += dt * ROT_SPEED;
+
+    if (holding) {
+      holdTime += dt;
+      if (holdTime >= HOLD) { holdTime = 0; holding = false; progress = 0; }
+      pathEl.setAttribute('d', toPath(allShapes[fromIdx], rot));
+    } else {
+      progress += dt / MORPH;
+      var toIdx = (fromIdx + 1) % shapes.length;
+      if (progress >= 1) {
+        fromIdx  = toIdx;
+        holding  = true;
+        holdTime = 0;
+        pathEl.setAttribute('d', toPath(allShapes[fromIdx], rot));
+      } else {
+        var e = ease(progress);
+        var interp = allShapes[fromIdx].map(function(p, i) {
+          return [p[0] + (allShapes[toIdx][i][0] - p[0]) * e,
+                  p[1] + (allShapes[toIdx][i][1] - p[1]) * e];
+        });
+        pathEl.setAttribute('d', toPath(interp, rot));
+      }
+    }
+    requestAnimationFrame(tick);
+  });
+}());
+</script>
+</body>
+</html>
