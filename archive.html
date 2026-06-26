@@ -1179,13 +1179,32 @@ html, body {
     setupAutocomplete('filterYear', 'suggestYear', years);
   }
 
+  /* ── Hemisphere detection (residence takes priority over city of origin) ── */
+  var SOUTHERN_COUNTRIES = [
+    'Argentina', 'Australia', 'Bolivia', 'Botswana', 'Brazil', 'Chile',
+    'DR Congo', 'Eswatini', 'Indonesia', 'Kenya', 'Lesotho', 'Madagascar',
+    'Malawi', 'Mozambique', 'Namibia', 'New Zealand', 'Paraguay', 'Peru',
+    'Rwanda', 'South Africa', 'Tanzania', 'Uruguay', 'Zambia', 'Zimbabwe'
+  ];
+
+  function isSouthernHemisphere(card) {
+    var loc = ((card.residence || card.city) || '').toUpperCase();
+    return SOUTHERN_COUNTRIES.some(function(c) {
+      return loc.indexOf(c.toUpperCase()) !== -1;
+    });
+  }
+
+  function seasonForMonth(month, south) {
+    if (month >= 3 && month <= 5)  return south ? 'AUTUMN' : 'SPRING';
+    if (month >= 6 && month <= 8)  return south ? 'WINTER' : 'SUMMER';
+    if (month >= 9 && month <= 11) return south ? 'SPRING' : 'AUTUMN';
+    return south ? 'SUMMER' : 'WINTER';
+  }
+
   /* ── Apply filters ── */
   function cardSeason(card) {
     var month = parseInt((card.date || '').split('/')[1], 10);
-    if (month >= 3 && month <= 5)  return 'SPRING';
-    if (month >= 6 && month <= 8)  return 'SUMMER';
-    if (month >= 9 && month <= 11) return 'AUTUMN';
-    return 'WINTER';
+    return seasonForMonth(month, isSouthernHemisphere(card));
   }
 
   window.applyFilters = function() {
@@ -1437,10 +1456,7 @@ html, body {
     var dateEl = document.createElement('span');
     dateEl.className = 'cb-date';
     var month = parseInt((card.date || '').split('/')[1], 10);
-    var season = month >= 3 && month <= 5 ? 'SPRING'
-               : month >= 6 && month <= 8 ? 'SUMMER'
-               : month >= 9 && month <= 11 ? 'AUTUMN'
-               : 'WINTER';
+    var season = seasonForMonth(month, isSouthernHemisphere(card));
     dateEl.textContent = season + ' ' + (card.date || '');
     var brand = document.createElement('span');
     brand.className = 'cb-brand';
@@ -1649,6 +1665,7 @@ html, body {
     var targetX      = 0;
     var currentX     = 0;
     var lastSpreadIdx = -1;
+    var wheelScrolled = false;
 
     (function tick() {
       var diff = targetX - currentX;
@@ -1699,18 +1716,16 @@ html, body {
       var cardTopY = items[0].getBoundingClientRect().top - rect.top;
       if (mouseY < cardTopY) return;
 
-      var fanPad     = items[0].offsetLeft;
-      var strip      = n > 1 ? items[1].offsetLeft - items[0].offsetLeft : items[0].offsetWidth;
-      var cardWidth  = items[0].offsetWidth;
-      var edgeGutter = 350;
-
-      // scroll space is always sized for MAX_CARDS — fixed boundaries, consistent gutters
-      var fixedRight = fanPad + (MAX_CARDS - 1) * strip + cardWidth;
-      var maxTargetX = edgeGutter - fanPad;
-      var minTargetX = rect.width - edgeGutter - fixedRight;
-      if (minTargetX < maxTargetX) {
-        var t = Math.max(0, Math.min(1, mouseX / rect.width));
-        targetX = maxTargetX + t * (minTargetX - maxTargetX);
+      if (!wheelScrolled) {
+        var card0NatLeft = items[0].getBoundingClientRect().left - rect.left - currentX;
+        var lastNatRight = items[n-1].getBoundingClientRect().right - rect.left - currentX;
+        var edgePad    = 80;
+        var maxTargetX = edgePad - card0NatLeft;
+        var minTargetX = rect.width - edgePad - lastNatRight;
+        if (minTargetX < maxTargetX) {
+          var t = Math.max(0, Math.min(1, mouseX / rect.width));
+          targetX = maxTargetX + t * (minTargetX - maxTargetX);
+        }
       }
 
       // spread zones also mapped to MAX_CARDS space, clamped to actual card count
@@ -1724,6 +1739,7 @@ html, body {
     stage.addEventListener('mouseleave', function() {
       resetSpread();
       lastSpreadIdx = -1;
+      wheelScrolled = false;
     });
 
     stage.addEventListener('wheel', function(e) {
@@ -1739,6 +1755,7 @@ html, body {
       var minX = stageCenter - lastRight  + cardW / 2;
       var delta = Math.abs(e.deltaX) >= Math.abs(e.deltaY) ? e.deltaX : e.deltaY;
       targetX = Math.max(minX, Math.min(maxX, targetX - delta));
+      wheelScrolled = true;
       e.preventDefault();
     }, { passive: false });
 
